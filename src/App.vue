@@ -1,57 +1,68 @@
 <script setup lang="ts">
-import { computed } from "vue"
-import { ref, onMounted } from "vue"
+import { ref, onMounted, computed } from "vue"
 import { fetchProducts } from "./api/product"
 import type { Product } from "./types/product"
-
 
 const mobileMenuOpen = ref(false)
 const isDark = ref(false)
 const products = ref<Product[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
-  const searchText = ref("")
-  const filteredProducts = computed(() => {
+const searchText = ref("")
+const selectedCategory = ref("all")
+
+const filteredProducts = computed(() => {
   const q = searchText.value.toLowerCase().trim()
 
-  if (!q) return products.value
+  let result = products.value
 
-  return products.value.filter((p) =>
-    p.title.toLowerCase().includes(q) ||
-    p.brand.toLowerCase().includes(q) ||
-    p.category.toLowerCase().includes(q)
-  )
+  // category filter
+  if (selectedCategory.value !== "all") {
+    result = result.filter(
+      (p) => p.category.toLowerCase() === selectedCategory.value
+    )
+  }
+
+  // search filter
+  if (q) {
+    result = result.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.brand.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q)
+    )
+  }
+
+  return result
 })
 
 function toggleDark() {
   isDark.value = !isDark.value
   document.documentElement.classList.toggle("dark", isDark.value)
+  saveTheme()
+}
+
+function saveTheme() {
+  localStorage.setItem("theme", isDark.value ? "dark" : "light")
 }
 
 onMounted(async () => {
-  // theme load
   const saved = localStorage.getItem("theme")
   if (saved === "dark") {
     isDark.value = true
     document.documentElement.classList.add("dark")
   }
 
-  // product load
   try {
     const data = await fetchProducts()
     products.value = data.products
   } catch (e) {
-  console.error(e)
-  error.value = e instanceof Error ? e.message : "Failed to load products"
-}
-   finally {
+    console.error(e)
+    error.value = e instanceof Error ? e.message : "Failed to load products"
+  } finally {
     loading.value = false
   }
 })
-
-function saveTheme() {
-  localStorage.setItem("theme", isDark.value ? "dark" : "light")
-}
 </script>
 
 <template>
@@ -66,7 +77,7 @@ function saveTheme() {
 
         <button
           class="rounded-md px-3 py-1 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
-          @click="toggleDark(); saveTheme()"
+          @click="toggleDark"
         >
           {{ isDark ? "Light" : "Dark" }} mode
         </button>
@@ -141,7 +152,7 @@ function saveTheme() {
       </div>
     </header>
 
-    <!-- Hero / Banner -->
+    <!-- Hero -->
     <section class="border-b border-gray-200 dark:border-gray-800">
       <div class="mx-auto max-w-6xl px-4 py-10 md:py-14 grid md:grid-cols-2 gap-8 items-center">
         <div>
@@ -183,60 +194,110 @@ function saveTheme() {
       </div>
     </section>
 
-    <!-- Main Content Placeholder -->
+    <!-- Products -->
     <main class="mx-auto max-w-6xl px-4 py-10">
       <h3 class="text-lg font-bold">Products</h3>
-      <p class="text-sm text-gray-500 dark:text-gray-400">
-    
-      </p>
 
-     <!-- Loading / Error -->
-<p v-if="loading" class="mt-6 text-sm text-gray-500 dark:text-gray-400">
-  Loading products...
-</p>
+      <div class="flex flex-wrap gap-2 mt-4">
+<!-- CATEGORY FILTER -->
+<button
+  @click="selectedCategory = 'all'"
+  :class="selectedCategory === 'all'
+    ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
+    : 'border border-gray-300 dark:border-gray-700'"
+  class="px-4 py-2 rounded-xl text-sm"
+>
+All
+</button>
 
-<p v-else-if="error" class="mt-6 text-sm text-red-500">
-  {{ error }}
-</p>
+<button
+  @click="selectedCategory = 'smartphones'"
+  :class="selectedCategory === 'smartphones'
+    ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
+    : 'border border-gray-300 dark:border-gray-700'"
+  class="px-4 py-2 rounded-xl text-sm"
+>
+Smartphones
+</button>
 
-<!-- Product Grid -->
-<div v-else class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-  <div
-    v-for="p in filteredProducts"
-    :key="p.id"
-    class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 hover:shadow-lg transition"
-  >
-    <img
-      :src="p.thumbnail"
-      :alt="p.title"
-      class="h-40 w-full object-cover rounded-xl bg-gray-100 dark:bg-gray-900"
-    />
+<button
+  @click="selectedCategory = 'laptops'"
+  :class="selectedCategory === 'laptops'
+    ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
+    : 'border border-gray-300 dark:border-gray-700'"
+  class="px-4 py-2 rounded-xl text-sm"
+>
+Laptops
+</button>
 
-    <h4 class="mt-3 font-semibold line-clamp-1">
-      {{ p.title }}
-    </h4>
+<button
+  @click="selectedCategory = 'tablets'"
+  :class="selectedCategory === 'tablets'
+    ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
+    : 'border border-gray-300 dark:border-gray-700'"
+  class="px-4 py-2 rounded-xl text-sm"
+>
+Tablets
+</button>
 
-    <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-      {{ p.brand }} • {{ p.category }}
-    </p>
+<button
+  @click="selectedCategory = 'mobile-accessories'"
+  :class="selectedCategory === 'mobile-accessories'
+    ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
+    : 'border border-gray-300 dark:border-gray-700'"
+  class="px-4 py-2 rounded-xl text-sm"
+>
+Accessories
+</button>
 
-    <div class="mt-3 flex items-center justify-between">
-      <p class="font-bold">
-        ${{ p.price }}
-      </p>
-
-      <p class="text-sm text-gray-500 dark:text-gray-400">
-        ⭐ {{ p.rating }}
-      </p>
-    </div>
-
-    <button
-      class="mt-4 w-full rounded-xl bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900 py-2 text-sm font-semibold hover:opacity-90"
-    >
-      Add to cart
-    </button>
-  </div>
 </div>
+
+      <p v-if="loading" class="mt-6 text-sm text-gray-500 dark:text-gray-400">
+        Loading products...
+      </p>
+
+      <p v-else-if="error" class="mt-6 text-sm text-red-500">
+        {{ error }}
+      </p>
+
+      <div v-else class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <router-link
+      v-for="p in filteredProducts"
+        :key="p.id"
+        :to="`/product/${p.id}`"
+          class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 hover:shadow-lg transition"
+        >
+          <img
+            :src="p.thumbnail"
+            :alt="p.title"
+            class="h-40 w-full object-cover rounded-xl bg-gray-100 dark:bg-gray-900"
+          />
+
+          <h4 class="mt-3 font-semibold line-clamp-1">
+            {{ p.title }}
+          </h4>
+
+          <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+            {{ p.brand }} • {{ p.category }}
+          </p>
+
+          <div class="mt-3 flex items-center justify-between">
+            <p class="font-bold">
+              ${{ p.price }}
+            </p>
+
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              ⭐ {{ p.rating }}
+            </p>
+          </div>
+
+          <button
+            class="mt-4 w-full rounded-xl bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900 py-2 text-sm font-semibold hover:opacity-90"
+          >
+            Add to cart
+          </button>
+        </router-link>
+      </div>
     </main>
 
     <footer class="border-t border-gray-200 dark:border-gray-800">
