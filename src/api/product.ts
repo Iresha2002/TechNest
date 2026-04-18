@@ -21,3 +21,12 @@ export async function fetchProducts(): Promise<ProductsResponse> {
     limit: products.length,
   }
 }
+export async function fetchProductById(id: string | number) {
+  const res = await fetch(`https://dummyjson.com/products/${id}`)
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch product details")
+  }
+
+  return res.json()
+}

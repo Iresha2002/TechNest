@@ -1,21 +1,21 @@
 import { createRouter, createWebHistory } from "vue-router"
-import Home from "../App.vue"
+import HomePage from "../pages/HomePage.vue"
 import ProductDetails from "../pages/ProductDetails.vue"
 
 const routes = [
   {
     path: "/",
-    component: Home
+    component: HomePage,
   },
   {
     path: "/product/:id",
-    component: ProductDetails
-  }
+    component: ProductDetails,
+  },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
 })
 
 export default router
